@@ -1,8 +1,7 @@
-# Resolve react_native_pods.rb with node to allow for hoisting
-require Pod::Executable.execute_command('node', ['-p',
-  'require.resolve(
-    "react-native/scripts/react_native_pods.rb",
-    {paths: [process.argv[1]]},
+require Pod::Executable.execute_command('node', ['-p', 
+  'require.resolve( 
+    "react-native/scripts/react_native_pods.rb", 
+    {paths: [process.argv[1]]}, 
   )', __dir__]).strip
 
 platform :ios, min_ios_version_supported
@@ -16,6 +15,8 @@ end
 
 target 'cookerProject' do
   config = use_native_modules!
+  use_frameworks! :linkage => :static
+  pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec'
 
   use_react_native!(
     :path => config[:reactNativePath],
@@ -23,13 +24,21 @@ target 'cookerProject' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-  target 'cookerProjectTests' do
+  # Add the glog podspec source here
+
+  target 'cookerProjectUat' do
+    inherit! :complete
+    # Pods for testing
+  end
+
+
+  target 'cookerProjectProd' do
     inherit! :complete
     # Pods for testing
   end
 
   post_install do |installer|
-    # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
+    # https://react-native-community.github.io/upgrade-helper/
     react_native_post_install(
       installer,
       config[:reactNativePath],
